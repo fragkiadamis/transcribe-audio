@@ -25,12 +25,14 @@ def main():
     result = model.transcribe(args.audio, verbose=False, **transcribe_kwargs)
 
     stem = os.path.splitext(os.path.basename(args.audio))[0]
+    out_dir = os.path.join("output", stem)
+    os.makedirs(out_dir, exist_ok=True)
 
     for fmt in ("json", "srt", "tsv", "vtt", "txt"):
-        writer = get_writer(fmt, "output")
+        writer = get_writer(fmt, out_dir)
         writer(result, args.audio, {})
 
-    print(f"Saved transcription to output/{stem}.[json/srt/tsv/txt/vtt]")
+    print(f"Saved transcription to output/{stem}/")
 
 
 if __name__ == "__main__":
