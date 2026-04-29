@@ -49,6 +49,7 @@ Verify it works with `ffmpeg -version`.
 ## Installation
 
 ```bash
+pip install uv
 git clone https://github.com/fragkiadamis/transcribe-audio.git
 cd transcribe-audio
 uv sync
