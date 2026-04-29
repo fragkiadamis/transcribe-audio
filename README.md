@@ -119,28 +119,41 @@ This project follows the [Conventional Commits](https://www.conventionalcommits.
 
 | Type | When to use |
 |---|---|
+| `build` | Build system or external dependency changes |
+| `chore` | Tooling, config, dependencies |
+| `ci` | CI/CD configuration changes |
+| `docs` | Documentation only |
 | `feat` | New feature |
 | `fix` | Bug fix |
+| `perf` | Performance improvement |
 | `refactor` | Code change that isn't a fix or feature |
-| `docs` | Documentation only |
-| `chore` | Tooling, config, dependencies |
+| `revert` | Reverts a previous commit |
+| `style` | Formatting, whitespace (no logic change) |
+| `test` | Adding or updating tests |
+| `bump` | Version bump (automated — do not use manually) |
 
-### Changelog
+### Local commit validation
 
-`CHANGELOG.md` is generated automatically after every commit via a post-commit hook powered by [commitizen](https://commitizen-tools.github.io/commitizen/). No manual steps needed.
-
-### Versioning
-
-The project uses [semantic versioning](https://semver.org/). When ready to release, run:
+A `commit-msg` hook is included to validate your commit message against the Conventional Commits spec before the commit is created. To install it:
 
 ```bash
-uv run cz bump
+cp .git/hooks/commit-msg .git/hooks/commit-msg
 ```
 
-This inspects the commits since the last tag, determines the next `major.minor.patch` version, updates it in `pyproject.toml`, regenerates `CHANGELOG.md`, and creates a git tag.
+The hook runs automatically — non-conventional messages will be rejected with an explanation.
+
+### Changelog & versioning
+
+Everything is automated. When a PR is merged into `main`, a GitHub Action runs [commitizen](https://commitizen-tools.github.io/commitizen/) to:
+
+- Determine the next version based on commit types since the last release
+- Update `pyproject.toml` and `CHANGELOG.md`
+- Create a git tag and push the bump commit back to `main`
 
 | Commit type | Version bump |
 |---|---|
 | `fix` | patch (0.0.**x**) |
 | `feat` | minor (0.**x**.0) |
 | Breaking change (`!`) | major (**x**.0.0) |
+
+No manual steps needed.
