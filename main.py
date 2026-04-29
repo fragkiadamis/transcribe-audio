@@ -2,7 +2,10 @@ import argparse
 from pathlib import Path
 
 import whisper
+from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn, TimeElapsedColumn
 from whisper.utils import get_writer
+
+FORMATS = ("json", "srt", "tsv", "vtt", "txt")
 
 
 def main():
@@ -14,21 +17,34 @@ def main():
     if args.lang is not None and len(args.lang) != 2:
         parser.error("Language code must be exactly 2 letters")
 
-    model = whisper.load_model("base")
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        TimeElapsedColumn(),
+    ) as progress:
+        load_task = progress.add_task("Loading model...", total=None)
+        model = whisper.load_model("base")
+        progress.update(load_task, completed=True, total=1, description="Model loaded")
 
-    transcribe_kwargs = {}
-    if args.lang:
-        transcribe_kwargs["language"] = args.lang
+        transcribe_kwargs = {}
+        if args.lang:
+            transcribe_kwargs["language"] = args.lang
 
-    result = model.transcribe(args.audio, verbose=False, **transcribe_kwargs)
+        transcribe_task = progress.add_task("Transcribing...", total=None)
+        result = model.transcribe(args.audio, verbose=None, **transcribe_kwargs)
+        progress.update(transcribe_task, completed=True, total=1, description="Transcription done")
 
-    stem = Path(args.audio).stem
-    out_dir = Path("output") / stem
-    out_dir.mkdir(parents=True, exist_ok=True)
+        stem = Path(args.audio).stem
+        out_dir = Path("output") / stem
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-    for fmt in ("json", "srt", "tsv", "vtt", "txt"):
-        writer = get_writer(fmt, str(out_dir))
-        writer(result, args.audio, {})
+        save_task = progress.add_task("Saving output...", total=len(FORMATS))
+        for fmt in FORMATS:
+            writer = get_writer(fmt, str(out_dir))
+            writer(result, args.audio, {})
+            progress.advance(save_task)
 
     print(f"Saved transcription to {out_dir}/")
 
