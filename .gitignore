@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Transcription output
+output/
