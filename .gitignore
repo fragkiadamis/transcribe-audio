@@ -11,3 +11,10 @@ wheels/
 
 # Transcription output
 output/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
