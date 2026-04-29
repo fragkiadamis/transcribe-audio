@@ -12,6 +12,7 @@ def main():
     parser = argparse.ArgumentParser(description="Transcribe an audio file using Whisper")
     parser.add_argument("audio", help="Path to the audio file")
     parser.add_argument("lang", nargs="?", help="2-letter language code (e.g. en, fr, ar, el)")
+    parser.add_argument("--model", default="base", choices=["tiny", "base", "small", "medium", "large"], help="Whisper model to use (default: base)")
     args = parser.parse_args()
 
     if args.lang is not None and len(args.lang) != 2:
@@ -25,7 +26,7 @@ def main():
         TimeElapsedColumn(),
     ) as progress:
         load_task = progress.add_task("Loading model...", total=None)
-        model = whisper.load_model("base")
+        model = whisper.load_model(args.model)
         progress.update(load_task, completed=True, total=1, description="Model loaded")
 
         transcribe_kwargs = {}
