@@ -1,5 +1,5 @@
 import argparse
-import os
+from pathlib import Path
 
 import whisper
 from whisper.utils import get_writer
@@ -14,8 +14,6 @@ def main():
     if args.lang is not None and len(args.lang) != 2:
         parser.error("Language code must be exactly 2 letters")
 
-    os.makedirs("output", exist_ok=True)
-
     model = whisper.load_model("base")
 
     transcribe_kwargs = {}
@@ -24,15 +22,15 @@ def main():
 
     result = model.transcribe(args.audio, verbose=False, **transcribe_kwargs)
 
-    stem = os.path.splitext(os.path.basename(args.audio))[0]
-    out_dir = os.path.join("output", stem)
-    os.makedirs(out_dir, exist_ok=True)
+    stem = Path(args.audio).stem
+    out_dir = Path("output") / stem
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     for fmt in ("json", "srt", "tsv", "vtt", "txt"):
-        writer = get_writer(fmt, out_dir)
+        writer = get_writer(fmt, str(out_dir))
         writer(result, args.audio, {})
 
-    print(f"Saved transcription to output/{stem}/")
+    print(f"Saved transcription to {out_dir}/")
 
 
 if __name__ == "__main__":
