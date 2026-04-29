@@ -131,7 +131,6 @@ This project follows the [Conventional Commits](https://www.conventionalcommits.
 | `revert` | Reverts a previous commit |
 | `style` | Formatting, whitespace (no logic change) |
 | `test` | Adding or updating tests |
-| `bump` | Version bump (automated — do not use manually) |
 
 ### Local commit validation
 
