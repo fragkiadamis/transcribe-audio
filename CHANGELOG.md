@@ -1,3 +1,9 @@
+## v1.1.0 (2026-04-29)
+
+### Feat
+
+- add support for specifying Whisper model via CLI argument
+
 ## v1.0.1 (2026-04-29)
 
 ### Fix
