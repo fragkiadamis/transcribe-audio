@@ -69,6 +69,7 @@ uv run main.py <audio-file> [lang]
 |---|---|---|
 | `audio-file` | Yes | Path to the audio file (mp3, wav, ogg, …) |
 | `lang` | No | 2-letter language code. If omitted, Whisper auto-detects the language. |
+| `--model` | No | Whisper model to use. One of `tiny`, `base`, `small`, `medium`, `large`. Defaults to `base`. |
 
 ### Examples
 
@@ -106,7 +107,7 @@ Any language supported by Whisper. Common codes: `en`, `fr`, `de`, `es`, `it`, `
 ## Notes
 
 - The first run downloads the `base` Whisper model (~150 MB) and caches it automatically.
-- For better accuracy on difficult audio, the model size can be changed to `small`, `medium`, or `large` in `main.py`.
+- For better accuracy on difficult audio, use `--model small`, `--model medium`, or `--model large`. Larger models are slower but more accurate.
 - GPU acceleration is used automatically if a CUDA-compatible GPU is available.
 
 ---
