@@ -29,7 +29,16 @@ sudo apt update && sudo apt install ffmpeg
 ```
 
 **Windows**
-```bash
+
+First, install [Chocolatey](https://chocolatey.org/) if you don't have it. Open PowerShell as Administrator and run:
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+```
+
+Verify with `choco --version`, then install FFmpeg:
+
+```powershell
 choco install ffmpeg
 ```
 
