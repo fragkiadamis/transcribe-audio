@@ -108,3 +108,39 @@ Any language supported by Whisper. Common codes: `en`, `fr`, `de`, `es`, `it`, `
 - The first run downloads the `base` Whisper model (~150 MB) and caches it automatically.
 - For better accuracy on difficult audio, the model size can be changed to `small`, `medium`, or `large` in `main.py`.
 - GPU acceleration is used automatically if a CUDA-compatible GPU is available.
+
+---
+
+## For developers
+
+### Commits
+
+This project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification. Common types:
+
+| Type | When to use |
+|---|---|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `refactor` | Code change that isn't a fix or feature |
+| `docs` | Documentation only |
+| `chore` | Tooling, config, dependencies |
+
+### Changelog
+
+`CHANGELOG.md` is generated automatically after every commit via a post-commit hook powered by [commitizen](https://commitizen-tools.github.io/commitizen/). No manual steps needed.
+
+### Versioning
+
+The project uses [semantic versioning](https://semver.org/). When ready to release, run:
+
+```bash
+uv run cz bump
+```
+
+This inspects the commits since the last tag, determines the next `major.minor.patch` version, updates it in `pyproject.toml`, regenerates `CHANGELOG.md`, and creates a git tag.
+
+| Commit type | Version bump |
+|---|---|
+| `fix` | patch (0.0.**x**) |
+| `feat` | minor (0.**x**.0) |
+| Breaking change (`!`) | major (**x**.0.0) |
