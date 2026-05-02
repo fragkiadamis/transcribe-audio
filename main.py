@@ -97,6 +97,7 @@ def main():
     parser.add_argument("-t", "--translate-to", dest="translate_to", metavar="LANG", help="Translate output to this language (e.g. en, fr, el)")
     parser.add_argument("--translator", default="google", choices=TRANSLATORS, help="Translation backend to use (default: google)")
     parser.add_argument("--api-key", dest="api_key", metavar="KEY", help="API key for the selected translator. For papago and baidu use 'id:secret' format.")
+    parser.add_argument("-d", "--device", default="auto", choices=["auto", "cpu", "cuda"], help="Device to run Whisper on: auto, cpu, or cuda (default: auto)")
     args = parser.parse_args()
 
     if args.lang is not None and len(args.lang) != 2:
@@ -117,11 +118,16 @@ def main():
     ) as progress:
         # Model loading — patch whisper.tqdm (from tqdm import tqdm in whisper/__init__.py)
         load_task = progress.add_task("Loading model...", total=None)
+        device = args.device if args.device != "auto" else ("cuda" if whisper.torch.cuda.is_available() else "cpu")
         _orig_whisper_tqdm = whisper.tqdm
         whisper.tqdm = _rich_tqdm_class(progress, load_task)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            model = whisper.load_model(args.model)
+            try:
+                model = whisper.load_model(args.model, device=device)
+            except RuntimeError:
+                device = "cpu"
+                model = whisper.load_model(args.model, device=device)
         whisper.tqdm = _orig_whisper_tqdm
         _complete_task(progress, load_task, "Model loaded")
 
@@ -131,10 +137,14 @@ def main():
             transcribe_kwargs["language"] = args.lang
         if args.prompt:
             transcribe_kwargs["initial_prompt"] = args.prompt
+        if device == "cpu":
+            transcribe_kwargs["fp16"] = False
         transcribe_task = progress.add_task("Transcribing...", total=None)
         _orig_tqdm = tqdm_module.tqdm
         tqdm_module.tqdm = _rich_tqdm_class(progress, transcribe_task)
-        result = model.transcribe(args.audio, verbose=False, **transcribe_kwargs)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = model.transcribe(args.audio, verbose=False, **transcribe_kwargs)
         tqdm_module.tqdm = _orig_tqdm
         _complete_task(progress, transcribe_task, "Transcription done")
 
