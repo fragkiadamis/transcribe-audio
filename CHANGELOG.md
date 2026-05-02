@@ -1,3 +1,10 @@
+## v1.3.0 (2026-05-02)
+
+### Feat
+
+- add support for multiple translation backends and API key configuration
+- add translation support with `--translate-to` flag using Google Translator
+
 ## v1.2.0 (2026-05-02)
 
 ### Feat
