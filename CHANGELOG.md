@@ -1,3 +1,9 @@
+## v1.5.0 (2026-05-02)
+
+### Feat
+
+- add device selection support for Whisper with `--device` flag
+
 ## v1.4.0 (2026-05-02)
 
 ### Feat
