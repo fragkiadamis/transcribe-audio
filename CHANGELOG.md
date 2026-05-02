@@ -1,3 +1,9 @@
+## v1.3.1 (2026-05-02)
+
+### Fix
+
+- update release workflow to skip CI for version bumps
+
 ## v1.3.0 (2026-05-02)
 
 ### Feat
