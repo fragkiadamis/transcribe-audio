@@ -1,3 +1,9 @@
+## v1.2.0 (2026-05-02)
+
+### Feat
+
+- add `--prompt` flag to CLI for setting initial transcription prompt
+
 ## v1.1.0 (2026-04-29)
 
 ### Feat
