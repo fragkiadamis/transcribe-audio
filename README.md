@@ -109,6 +109,12 @@ output/
 
 ---
 
+## Supported transcription languages
+
+Any language supported by Whisper. Common codes: `en`, `fr`, `de`, `es`, `it`, `pt`, `el`, `ar`, `zh`, `ja`, `ru`. Full list [here](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py).
+
+---
+
 ## Translators
 
 Translation is powered by [deep-translator](https://github.com/nidhaloff/deep-translator). The selected backend translates each segment individually, so timestamps in `.srt` and `.vtt` files remain aligned with the audio.
@@ -131,12 +137,6 @@ Translation is powered by [deep-translator](https://github.com/nidhaloff/deep-tr
 ### Supported translation languages
 
 Supported languages depend on the backend. The default `google` backend supports 133 languages — see the [Google Translate supported languages](https://cloud.google.com/translate/docs/languages). For other backends, refer to their respective documentation.
-
----
-
-## Supported transcription languages
-
-Any language supported by Whisper. Common codes: `en`, `fr`, `de`, `es`, `it`, `pt`, `el`, `ar`, `zh`, `ja`, `ru`. Full list [here](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py).
 
 ---
 
