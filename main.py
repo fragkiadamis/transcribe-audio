@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 
 import whisper
+from deep_translator import GoogleTranslator
 from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn, TimeElapsedColumn
 from whisper.utils import get_writer
 
@@ -14,6 +15,7 @@ def main():
     parser.add_argument("-l", "--lang", help="2-letter language code (e.g. en, fr, ar, el)")
     parser.add_argument("-m", "--model", default="base", choices=["tiny", "base", "small", "medium", "large"], help="Whisper model to use (default: base)")
     parser.add_argument("-p", "--prompt", help="Initial prompt to guide transcription style or vocabulary")
+    parser.add_argument("-t", "--translate-to", dest="translate_to", metavar="LANG", help="Translate output to this language (e.g. en, fr, el). Use 'en' for Whisper's built-in translation, or any Google Translate language code for others.")
     args = parser.parse_args()
 
     if args.lang is not None and len(args.lang) != 2:
@@ -35,10 +37,20 @@ def main():
             transcribe_kwargs["language"] = args.lang
         if args.prompt:
             transcribe_kwargs["initial_prompt"] = args.prompt
+        if args.translate_to == "en":
+            transcribe_kwargs["task"] = "translate"
 
         transcribe_task = progress.add_task("Transcribing...", total=None)
         result = model.transcribe(args.audio, verbose=None, **transcribe_kwargs)
         progress.update(transcribe_task, completed=True, total=1, description="Transcription done")
+
+        if args.translate_to and args.translate_to != "en":
+            translate_task = progress.add_task("Translating...", total=None)
+            translator = GoogleTranslator(source="auto", target=args.translate_to)
+            result["text"] = translator.translate(result["text"])
+            for segment in result["segments"]:
+                segment["text"] = translator.translate(segment["text"])
+            progress.update(translate_task, completed=True, total=1, description="Translation done")
 
         stem = Path(args.audio).stem
         out_dir = Path("output") / stem
