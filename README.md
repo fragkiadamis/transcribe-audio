@@ -3,6 +3,7 @@
 Transcribe any audio file locally using [OpenAI Whisper](https://github.com/openai/whisper). No API key needed — everything runs on your machine.
 
 Output is saved to `output/<filename>/` in five formats: `txt`, `srt`, `vtt`, `tsv`, and `json`.
+Translation to any language is supported via multiple backends (Google, DeepL, Microsoft, and more).
 
 ---
 
@@ -62,14 +63,18 @@ That's it. `uv sync` installs all dependencies (including PyTorch and Whisper) i
 ## Usage
 
 ```bash
-uv run main.py <audio-file> [lang]
+uv run main.py <audio-file> [options]
 ```
 
-| Argument | Required | Description |
-|---|---|---|
-| `audio-file` | Yes | Path to the audio file (mp3, wav, ogg, …) |
-| `lang` | No | 2-letter language code. If omitted, Whisper auto-detects the language. |
-| `--model` | No | Whisper model to use. One of `tiny`, `base`, `small`, `medium`, `large`. Defaults to `base`. |
+| Argument | Short | Required | Description |
+|---|---|---|---|
+| `audio-file` | | Yes | Path to the audio file (mp3, wav, ogg, …) |
+| `--lang` | `-l` | No | 2-letter language code. If omitted, Whisper auto-detects. |
+| `--model` | `-m` | No | Whisper model: `tiny`, `base`, `small`, `medium`, `large`. Default: `base`. |
+| `--prompt` | `-p` | No | Initial prompt to guide transcription style or vocabulary. |
+| `--translate-to` | `-t` | No | Translate output to this language code (e.g. `en`, `fr`, `el`). Skipped if target matches the source. |
+| `--translator` | | No | Translation backend to use. Default: `google`. See [translators](#translators) below. |
+| `--api-key` | | No | API key for the selected translator. For `papago` and `baidu` use `id:secret` format. |
 
 ### Examples
 
@@ -77,11 +82,17 @@ uv run main.py <audio-file> [lang]
 # Auto-detect language
 uv run main.py audio/interview.mp3
 
-# French audio
-uv run main.py audio/french.mp3 fr
+# French audio, small model for better accuracy
+uv run main.py audio/french.mp3 -l fr -m small
 
-# Greek audio
-uv run main.py audio/greek.mp3 el
+# Greek audio with a prompt to guide vocabulary
+uv run main.py audio/greek.mp3 -l el -p "Medical consultation using clinical terminology."
+
+# Translate Greek audio to English using Google (default)
+uv run main.py audio/greek.mp3 -l el -t en
+
+# Translate to French using DeepL
+uv run main.py audio/greek.mp3 -l el -t fr --translator deepl --api-key YOUR_KEY
 ```
 
 Output is written to `output/<filename>/`:
@@ -89,16 +100,41 @@ Output is written to `output/<filename>/`:
 ```
 output/
 └── french/
-    ├── french.txt   ← plain text
-    ├── french.srt   ← subtitles (SubRip)
-    ├── french.vtt   ← subtitles (WebVTT)
-    ├── french.tsv   ← tab-separated with timestamps
-    └── french.json  ← full data including segments and metadata
+    ├── transcription.txt   ← plain text
+    ├── transcription.srt   ← subtitles (SubRip)
+    ├── transcription.vtt   ← subtitles (WebVTT)
+    ├── transcription.tsv   ← tab-separated with timestamps
+    └── transcription.json  ← full data including segments and metadata
 ```
 
 ---
 
-## Supported languages
+## Translators
+
+Translation is powered by [deep-translator](https://github.com/nidhaloff/deep-translator). The selected backend translates each segment individually, so timestamps in `.srt` and `.vtt` files remain aligned with the audio.
+
+| Translator | Key | Requires API key |
+|---|---|---|
+| Google Translate | `google` | No |
+| MyMemory | `mymemory` | No |
+| Linguee | `linguee` | No |
+| Pons | `pons` | No |
+| LibreTranslate | `libre` | No (uses public instance) |
+| DeepL | `deepl` | Yes — `--api-key` |
+| Microsoft Translator | `microsoft` | Yes — `--api-key` |
+| Yandex Translate | `yandex` | Yes — `--api-key` |
+| QCRI | `qcri` | Yes — `--api-key` |
+| ChatGPT | `chatgpt` | Yes — `--api-key` |
+| Papago | `papago` | Yes — `--api-key client_id:secret_key` |
+| Baidu Translate | `baidu` | Yes — `--api-key appid:appkey` |
+
+### Supported translation languages
+
+Supported languages depend on the backend. The default `google` backend supports 133 languages — see the [Google Translate supported languages](https://cloud.google.com/translate/docs/languages). For other backends, refer to their respective documentation.
+
+---
+
+## Supported transcription languages
 
 Any language supported by Whisper. Common codes: `en`, `fr`, `de`, `es`, `it`, `pt`, `el`, `ar`, `zh`, `ja`, `ru`. Full list [here](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py).
 
@@ -106,9 +142,11 @@ Any language supported by Whisper. Common codes: `en`, `fr`, `de`, `es`, `it`, `
 
 ## Notes
 
-- The first run downloads the `base` Whisper model (~150 MB) and caches it automatically.
-- For better accuracy on difficult audio, use `--model small`, `--model medium`, or `--model large`. Larger models are slower but more accurate.
+- The first run downloads the selected Whisper model and caches it. The `base` model is ~150 MB; `large` is ~3 GB.
+- For better accuracy on difficult audio, use `-m small`, `-m medium`, or `-m large`. Larger models are slower but more accurate.
 - GPU acceleration is used automatically if a CUDA-compatible GPU is available.
+- Use `--prompt` to steer Whisper toward domain-specific vocabulary or a particular style. See `prompt_example.txt` for an example.
+- Translation is skipped automatically if the target language matches the detected source language.
 
 ---
 
