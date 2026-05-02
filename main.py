@@ -1,4 +1,6 @@
 import argparse
+import tqdm as tqdm_module
+import warnings
 from pathlib import Path
 
 import whisper
@@ -54,6 +56,38 @@ def _build_translator(name, source, target, api_key):
     return cls(source=source, target=target)
 
 
+def _rich_tqdm_class(progress, task_id):
+    """Returns a tqdm-compatible class that routes progress updates to a Rich task."""
+    class _T:
+        def __init__(self, *args, total=None, **kwargs):
+            if total is not None:
+                progress.update(task_id, total=total)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def update(self, n=1):
+            progress.advance(task_id, n)
+
+        def close(self):
+            pass
+
+        def set_postfix(self, **kwargs):
+            pass
+
+    return _T
+
+
+def _complete_task(progress, task_id, description):
+    """Marks a Rich task as 100% complete, handling both determinate and indeterminate tasks."""
+    task = next(t for t in progress.tasks if t.id == task_id)
+    total = task.total if task.total is not None else 1
+    progress.update(task_id, completed=total, total=total, description=description)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Transcribe an audio file using Whisper")
     parser.add_argument("audio", help="Path to the audio file")
@@ -81,27 +115,41 @@ def main():
         TaskProgressColumn(),
         TimeElapsedColumn(),
     ) as progress:
+        # Model loading — patch whisper.tqdm (from tqdm import tqdm in whisper/__init__.py)
         load_task = progress.add_task("Loading model...", total=None)
-        model = whisper.load_model(args.model)
-        progress.update(load_task, completed=True, total=1, description="Model loaded")
+        _orig_whisper_tqdm = whisper.tqdm
+        whisper.tqdm = _rich_tqdm_class(progress, load_task)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            model = whisper.load_model(args.model)
+        whisper.tqdm = _orig_whisper_tqdm
+        _complete_task(progress, load_task, "Model loaded")
 
+        # Transcription — patch tqdm.tqdm (import tqdm; tqdm.tqdm(...) in transcribe.py)
         transcribe_kwargs = {}
         if args.lang:
             transcribe_kwargs["language"] = args.lang
         if args.prompt:
             transcribe_kwargs["initial_prompt"] = args.prompt
         transcribe_task = progress.add_task("Transcribing...", total=None)
-        result = model.transcribe(args.audio, verbose=None, **transcribe_kwargs)
-        progress.update(transcribe_task, completed=True, total=1, description="Transcription done")
+        _orig_tqdm = tqdm_module.tqdm
+        tqdm_module.tqdm = _rich_tqdm_class(progress, transcribe_task)
+        result = model.transcribe(args.audio, verbose=False, **transcribe_kwargs)
+        tqdm_module.tqdm = _orig_tqdm
+        _complete_task(progress, transcribe_task, "Transcription done")
 
         source_lang = result.get("language") or args.lang
         if args.translate_to and args.translate_to != source_lang:
-            translate_task = progress.add_task("Translating...", total=None)
+            segments = result["segments"]
+            translate_task = progress.add_task("Translating...", total=len(segments))
             translator = _build_translator(args.translator, source_lang or "auto", args.translate_to, args.api_key)
-            result["text"] = translator.translate(result["text"])
-            for segment in result["segments"]:
+            translated_segments = []
+            for segment in segments:
                 segment["text"] = translator.translate(segment["text"])
-            progress.update(translate_task, completed=True, total=1, description="Translation done")
+                translated_segments.append(segment["text"])
+                progress.advance(translate_task)
+            result["text"] = " ".join(translated_segments)
+            progress.update(translate_task, description="Translation done")
 
         stem = Path(args.audio).stem
         out_dir = Path("output") / stem
