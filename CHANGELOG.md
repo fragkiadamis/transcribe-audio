@@ -1,3 +1,9 @@
+## v1.3.2 (2026-05-02)
+
+### Refactor
+
+- simplify translation logic and improve translator initialization
+
 ## v1.3.1 (2026-05-02)
 
 ### Fix
