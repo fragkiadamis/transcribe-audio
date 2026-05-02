@@ -1,3 +1,9 @@
+## v1.4.0 (2026-05-02)
+
+### Feat
+
+- integrate Rich progress bar with Whisper and tqdm for enhanced task tracking
+
 ## v1.3.2 (2026-05-02)
 
 ### Refactor
