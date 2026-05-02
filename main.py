@@ -60,7 +60,7 @@ def main():
     parser.add_argument("-l", "--lang", help="2-letter language code (e.g. en, fr, ar, el)")
     parser.add_argument("-m", "--model", default="base", choices=["tiny", "base", "small", "medium", "large"], help="Whisper model to use (default: base)")
     parser.add_argument("-p", "--prompt", help="Initial prompt to guide transcription style or vocabulary")
-    parser.add_argument("-t", "--translate-to", dest="translate_to", metavar="LANG", help="Translate output to this language (e.g. en, fr, el). Use 'en' for Whisper's built-in translation, or any Google Translate language code for others.")
+    parser.add_argument("-t", "--translate-to", dest="translate_to", metavar="LANG", help="Translate output to this language (e.g. en, fr, el)")
     parser.add_argument("--translator", default="google", choices=TRANSLATORS, help="Translation backend to use (default: google)")
     parser.add_argument("--api-key", dest="api_key", metavar="KEY", help="API key for the selected translator. For papago and baidu use 'id:secret' format.")
     args = parser.parse_args()
@@ -68,7 +68,7 @@ def main():
     if args.lang is not None and len(args.lang) != 2:
         parser.error("Language code must be exactly 2 letters")
 
-    if args.translate_to and args.translate_to != "en":
+    if args.translate_to:
         if args.translator in _REQUIRES_KEY and not args.api_key:
             parser.error(f"--translator {args.translator} requires --api-key")
         if args.translator in _DUAL_KEY and args.api_key and ":" not in args.api_key:
@@ -90,16 +90,14 @@ def main():
             transcribe_kwargs["language"] = args.lang
         if args.prompt:
             transcribe_kwargs["initial_prompt"] = args.prompt
-        if args.translate_to == "en":
-            transcribe_kwargs["task"] = "translate"
-
         transcribe_task = progress.add_task("Transcribing...", total=None)
         result = model.transcribe(args.audio, verbose=None, **transcribe_kwargs)
         progress.update(transcribe_task, completed=True, total=1, description="Transcription done")
 
-        if args.translate_to and args.translate_to != args.lang:
+        source_lang = result.get("language") or args.lang
+        if args.translate_to and args.translate_to != source_lang:
             translate_task = progress.add_task("Translating...", total=None)
-            translator = _build_translator(args.translator, "auto", args.translate_to, args.api_key)
+            translator = _build_translator(args.translator, source_lang or "auto", args.translate_to, args.api_key)
             result["text"] = translator.translate(result["text"])
             for segment in result["segments"]:
                 segment["text"] = translator.translate(segment["text"])
