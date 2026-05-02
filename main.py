@@ -11,8 +11,9 @@ FORMATS = ("json", "srt", "tsv", "vtt", "txt")
 def main():
     parser = argparse.ArgumentParser(description="Transcribe an audio file using Whisper")
     parser.add_argument("audio", help="Path to the audio file")
-    parser.add_argument("lang", nargs="?", help="2-letter language code (e.g. en, fr, ar, el)")
-    parser.add_argument("--model", default="base", choices=["tiny", "base", "small", "medium", "large"], help="Whisper model to use (default: base)")
+    parser.add_argument("-l", "--lang", help="2-letter language code (e.g. en, fr, ar, el)")
+    parser.add_argument("-m", "--model", default="base", choices=["tiny", "base", "small", "medium", "large"], help="Whisper model to use (default: base)")
+    parser.add_argument("-p", "--prompt", help="Initial prompt to guide transcription style or vocabulary")
     args = parser.parse_args()
 
     if args.lang is not None and len(args.lang) != 2:
@@ -32,6 +33,8 @@ def main():
         transcribe_kwargs = {}
         if args.lang:
             transcribe_kwargs["language"] = args.lang
+        if args.prompt:
+            transcribe_kwargs["initial_prompt"] = args.prompt
 
         transcribe_task = progress.add_task("Transcribing...", total=None)
         result = model.transcribe(args.audio, verbose=None, **transcribe_kwargs)
