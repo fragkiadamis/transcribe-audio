@@ -75,6 +75,7 @@ uv run main.py <audio-file> [options]
 | `--translate-to` | `-t` | No | Translate output to this language code (e.g. `en`, `fr`, `el`). Skipped if target matches the source. |
 | `--translator` | | No | Translation backend to use. Default: `google`. See [translators](#translators) below. |
 | `--api-key` | | No | API key for the selected translator. For `papago` and `baidu` use `id:secret` format. |
+| `--device` | `-d` | No | Device to run Whisper on: `auto`, `cpu`, or `cuda`. Default: `auto`. Falls back to CPU on CUDA out-of-memory. |
 
 ### Examples
 
@@ -93,6 +94,9 @@ uv run main.py audio/greek.mp3 -l el -t en
 
 # Translate to French using DeepL
 uv run main.py audio/greek.mp3 -l el -t fr --translator deepl --api-key YOUR_KEY
+
+# Force CPU to avoid GPU out-of-memory errors
+uv run main.py audio/greek.mp3 -m large -d cpu
 ```
 
 Output is written to `output/<filename>/`:
@@ -144,7 +148,8 @@ Supported languages depend on the backend. The default `google` backend supports
 
 - The first run downloads the selected Whisper model and caches it. The `base` model is ~150 MB; `large` is ~3 GB.
 - For better accuracy on difficult audio, use `-m small`, `-m medium`, or `-m large`. Larger models are slower but more accurate.
-- GPU acceleration is used automatically if a CUDA-compatible GPU is available.
+- GPU acceleration is used automatically if a CUDA-compatible GPU is available. Use `-d cpu` to force CPU if you run into CUDA out-of-memory errors. The `large` model requires ~10 GB of VRAM.
+- If CUDA runs out of memory, the tool automatically falls back to CPU without crashing.
 - Use `--prompt` to steer Whisper toward domain-specific vocabulary or a particular style. See `prompt_example.txt` for an example.
 - Translation is skipped automatically if the target language matches the detected source language.
 
