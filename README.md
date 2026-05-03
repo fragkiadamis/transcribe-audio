@@ -56,48 +56,22 @@ cd transcribe-audio
 uv sync
 ```
 
-That's it. `uv sync` installs all dependencies (including PyTorch and Whisper) into an isolated virtual environment.
+That's it. `uv sync` installs all dependencies (including PyTorch, Whisper, and PySide6) into an isolated virtual environment.
 
 ---
 
 ## Usage
 
 ```bash
-uv run main.py <audio-file> [options]
+uv run main.py
 ```
 
-| Argument | Short | Required | Description |
-|---|---|---|---|
-| `audio-file` | | Yes | Path to the audio file (mp3, wav, ogg, …) |
-| `--lang` | `-l` | No | 2-letter language code. If omitted, Whisper auto-detects. |
-| `--model` | `-m` | No | Whisper model: `tiny`, `base`, `small`, `medium`, `large`. Default: `base`. |
-| `--prompt` | `-p` | No | Initial prompt to guide transcription style or vocabulary. |
-| `--translate-to` | `-t` | No | Translate output to this language code (e.g. `en`, `fr`, `el`). Skipped if target matches the source. |
-| `--translator` | | No | Translation backend to use. Default: `google`. See [translators](#translators) below. |
-| `--api-key` | | No | API key for the selected translator. For `papago` and `baidu` use `id:secret` format. |
-| `--device` | `-d` | No | Device to run Whisper on: `auto`, `cpu`, or `cuda`. Default: `auto`. Falls back to CPU on CUDA out-of-memory. |
+This opens the GUI. From there:
 
-### Examples
-
-```bash
-# Auto-detect language
-uv run main.py audio/interview.mp3
-
-# French audio, small model for better accuracy
-uv run main.py audio/french.mp3 -l fr -m small
-
-# Greek audio with a prompt to guide vocabulary
-uv run main.py audio/greek.mp3 -l el -p "Medical consultation using clinical terminology."
-
-# Translate Greek audio to English using Google (default)
-uv run main.py audio/greek.mp3 -l el -t en
-
-# Translate to French using DeepL
-uv run main.py audio/greek.mp3 -l el -t fr --translator deepl --api-key YOUR_KEY
-
-# Force CPU to avoid GPU out-of-memory errors
-uv run main.py audio/greek.mp3 -m large -d cpu
-```
+1. **Browse** — select an audio file (mp3, wav, ogg, flac, m4a, aac)
+2. **Settings** — optionally set language, model, device, and a transcription prompt
+3. **Translation** — optionally set a target language, backend, and API key
+4. **Transcribe** — click the button and watch progress in real time
 
 Output is written to `output/<filename>/`:
 
@@ -110,6 +84,20 @@ output/
     ├── transcription.tsv   ← tab-separated with timestamps
     └── transcription.json  ← full data including segments and metadata
 ```
+
+---
+
+## Settings reference
+
+| Field | Description |
+|---|---|
+| Language | 2-letter language code (e.g. `en`, `fr`, `el`). Leave empty for auto-detection. |
+| Model | Whisper model: `tiny`, `base`, `small`, `medium`, `large`. Default: `base`. Larger models are slower but more accurate. |
+| Device | `auto`, `cpu`, or `cuda`. Default: `auto`. Falls back to CPU automatically on CUDA out-of-memory. |
+| Prompt | Optional — guides transcription style or vocabulary (e.g. domain-specific terms). |
+| Translate to | Target language code (e.g. `en`, `fr`, `el`). Leave empty to skip translation. |
+| Backend | Translation backend. Default: `google`. See [Translators](#translators) below. |
+| API Key | Required for some backends. For `papago` and `baidu` use `id:secret` format. |
 
 ---
 
@@ -130,15 +118,13 @@ Translation is powered by [deep-translator](https://github.com/nidhaloff/deep-tr
 | Linguee | `linguee` | No |
 | Pons | `pons` | No |
 | LibreTranslate | `libre` | No (uses public instance) |
-| DeepL | `deepl` | Yes — `--api-key` |
-| Microsoft Translator | `microsoft` | Yes — `--api-key` |
-| Yandex Translate | `yandex` | Yes — `--api-key` |
-| QCRI | `qcri` | Yes — `--api-key` |
-| ChatGPT | `chatgpt` | Yes — `--api-key` |
-| Papago | `papago` | Yes — `--api-key client_id:secret_key` |
-| Baidu Translate | `baidu` | Yes — `--api-key appid:appkey` |
-
-### Supported translation languages
+| DeepL | `deepl` | Yes — API key |
+| Microsoft Translator | `microsoft` | Yes — API key |
+| Yandex Translate | `yandex` | Yes — API key |
+| QCRI | `qcri` | Yes — API key |
+| ChatGPT | `chatgpt` | Yes — API key |
+| Papago | `papago` | Yes — `client_id:secret_key` |
+| Baidu Translate | `baidu` | Yes — `appid:appkey` |
 
 Supported languages depend on the backend. The default `google` backend supports 133 languages — see the [Google Translate supported languages](https://cloud.google.com/translate/docs/languages). For other backends, refer to their respective documentation.
 
@@ -147,10 +133,8 @@ Supported languages depend on the backend. The default `google` backend supports
 ## Notes
 
 - The first run downloads the selected Whisper model and caches it. The `base` model is ~150 MB; `large` is ~3 GB.
-- For better accuracy on difficult audio, use `-m small`, `-m medium`, or `-m large`. Larger models are slower but more accurate.
-- GPU acceleration is used automatically if a CUDA-compatible GPU is available. Use `-d cpu` to force CPU if you run into CUDA out-of-memory errors. The `large` model requires ~10 GB of VRAM.
+- GPU acceleration is used automatically if a CUDA-compatible GPU is available. Select `cpu` if you run into CUDA out-of-memory errors. The `large` model requires ~10 GB of VRAM.
 - If CUDA runs out of memory, the tool automatically falls back to CPU without crashing.
-- Use `--prompt` to steer Whisper toward domain-specific vocabulary or a particular style. See `prompt_example.txt` for an example.
 - Translation is skipped automatically if the target language matches the detected source language.
 
 ---
